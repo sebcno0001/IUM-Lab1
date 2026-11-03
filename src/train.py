@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
@@ -36,7 +37,22 @@ def main():
     model = DecisionTreeClassifier(random_state=seed)
     model.fit(X_train, y_train)
 
-    print(f"Trening: {len(X_train)} próbek; test: {len(X_test)} próbek")
+    # Ocena na danych niewykorzystanych podczas treningu.
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+    report = classification_report(
+        y_test, predictions, labels=[0, 1, 2], target_names=iris.target_names,
+        digits=4, zero_division=0
+    )
+    results = (
+        f"Trening: {len(X_train)} próbek; test: {len(X_test)} próbek\n"
+        f"TEST_SIZE={test_size}, RANDOM_SEED={seed}\n"
+        f"Accuracy: {accuracy:.4f}\n\n{report}"
+    )
+    results_dir = ROOT / "results"
+    results_dir.mkdir(exist_ok=True)
+    (results_dir / "wyniki.txt").write_text(results, encoding="utf-8")
+    print("\n" + results)
 
 
 if __name__ == "__main__":
