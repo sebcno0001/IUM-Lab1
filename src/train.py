@@ -1,6 +1,8 @@
+import os
 from pathlib import Path
 
 import pandas as pd
+from dotenv import load_dotenv
 from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
@@ -10,9 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    data_path = ROOT / "data/iris.csv"
-    test_size = 0.2
-    seed = 42
+    # Wczytanie parametrów z pliku .env.
+    load_dotenv(ROOT / ".env")
+    data_path = ROOT / (os.getenv("DATA_PATH") or "data/iris.csv")
+    test_size = float(os.getenv("TEST_SIZE") or "0.2")
+    seed = int(os.getenv("RANDOM_SEED") or "42")
 
     if not 0 < test_size < 1:
         raise ValueError("TEST_SIZE musi być pomiędzy 0 i 1.")
@@ -28,6 +32,7 @@ def main():
     print("\nRozmiar:", df.shape)
     print("\nStatystyki:\n", df.describe())
 
+    # Oddzielenie cech wejściowych od klasy, którą model ma przewidywać.
     X = df.drop(columns="target")
     y = df["target"]
     # Stratyfikacja zachowuje proporcje klas.
@@ -35,6 +40,7 @@ def main():
         X, y, test_size=test_size, random_state=seed, stratify=y
     )
     model = DecisionTreeClassifier(random_state=seed)
+    # Model uczy się wyłącznie na zbiorze treningowym.
     model.fit(X_train, y_train)
 
     # Ocena na danych niewykorzystanych podczas treningu.
@@ -51,6 +57,7 @@ def main():
     )
     results_dir = ROOT / "results"
     results_dir.mkdir(exist_ok=True)
+    # Zapis raportu pozwala zachować wynik poza terminalem.
     (results_dir / "wyniki.txt").write_text(results, encoding="utf-8")
     print("\n" + results)
 
